@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using ODataEF_QueryPerformance_Sample.DataModel;
 
 namespace ODataEF_QueryPerformance_Sample.Controllers
 {
@@ -11,16 +12,28 @@ namespace ODataEF_QueryPerformance_Sample.Controllers
     {
         // GET api/values
         [HttpGet]
-        public IEnumerable<string> Get()
+        public IEnumerable<User> Get()
         {
-            return new string[] { "value1", "value2" };
+
+            var dbContext = new EFContext();
+            dbContext.Configuration.LazyLoadingEnabled = false;
+
+            var users = dbContext.Users.Take(100).ToList();
+
+            return users;
         }
 
         // GET api/values/5
-        [HttpGet("{id}")]
-        public string Get(int id)
+        [HttpGet("search")]
+        public IActionResult SearchCustomer([FromQuery(Name = "username")] string username)
         {
-            return "value";
+            var dbContext = new EFContext();
+            dbContext.Configuration.LazyLoadingEnabled = false;
+            var users = dbContext.Users
+                        .Where(u => u.UserName.Contains(username))
+                        .Take(100);
+                        
+            return Ok(users);
         }
 
         // POST api/values
@@ -29,16 +42,5 @@ namespace ODataEF_QueryPerformance_Sample.Controllers
         {
         }
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
     }
 }
