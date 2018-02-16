@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Microsoft.AspNet.OData.Extensions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using ODataEF_QueryPerformance_Sample.OData;
 
 namespace ODataEF_QueryPerformance_Sample
 {
@@ -23,6 +19,7 @@ namespace ODataEF_QueryPerformance_Sample
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddOData();
             services.AddMvc();
         }
 
@@ -34,7 +31,13 @@ namespace ODataEF_QueryPerformance_Sample
                 app.UseDeveloperExceptionPage();
             }
 
-            app.UseMvc();
+            app.UseMvc(routeBuilder =>
+            {
+                var builder = new EFSampleODataModelBuilder();
+                routeBuilder.Count().Filter().OrderBy().Expand().Select().MaxTop(null);
+                routeBuilder.MapODataServiceRoute("ODataRoute", "odata", builder.DefineEdmModel(app.ApplicationServices));
+                routeBuilder.EnableDependencyInjection();
+            });
         }
     }
 }
